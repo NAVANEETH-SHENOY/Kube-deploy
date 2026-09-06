@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% set active_page = 'admin' %}
+
+{% block title %}Manage Events - EventOps{% endblock %}
+
+{% block content %}
+<!-- Admin Permission / Login Page -->
+<div id="admin-login-view" class="state-message" style="display: none; max-width: 480px; margin: 40px auto; padding: 40px; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; box-shadow: var(--shadow-lg);">
+    <div class="state-icon" style="background-color: var(--primary-light); color: var(--primary); margin-bottom: 24px;">
+        <i data-lucide="lock" style="width: 32px; height: 32px;"></i>
+    </div>
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; color: var(--secondary);">Admin Authorization</h2>
+    <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 0.95rem;">Enter the administrative password to manage system events.</p>
+    
+    <div style="width: 100%; text-align: left; margin-bottom: 20px;">
+        <label for="admin-password" style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase;">Password</label>
+        <input type="password" id="admin-password" placeholder="Enter password" class="search-input" style="padding-left: 16px; width: 100%; height: 44px; font-size: 1rem; border-radius: 8px;" />
+        <p id="login-error-msg" class="error-text" style="display: none; margin-top: 8px; font-size: 0.85rem;"></p>
+    </div>
+    
+    <button id="btn-login-verify" class="btn btn-primary btn-block" style="height: 44px; font-size: 1rem;">
+        Verify & Access
+    </button>
+</div>
+
+<!-- Admin Dashboard View -->
+<div id="admin-dashboard-view" style="display: none;">
+    <div class="page-header" style="margin-bottom: 32px;">
+        <div>
+            <h1 class="page-title">Event Management Console</h1>
+            <p class="page-subtitle">Add, modify, or remove campus events from the database.</p>
+        </div>
+        <div class="header-actions">
+            <a href="/admin/events/new" class="btn btn-primary">
+                <i data-lucide="plus"></i> Add New Event
+            </a>
+            <button id="btn-logout" class="btn btn-outline" style="border-color: #ef4444; color: #ef4444;">
+                <i data-lucide="log-out"></i> Exit Admin
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats summary -->
+    <div class="stats-grid" style="margin-bottom: 32px;">
+        <div class="stat-card color-yellow">
+            <div class="stat-icon"><i data-lucide="calendar"></i></div>
+            <div class="stat-info">
+                <p class="stat-value" id="admin-stat-total">--</p>
+                <h3>Total Events</h3>
+            </div>
+        </div>
+        <div class="stat-card color-dark-purple">
+            <div class="stat-icon"><i data-lucide="trending-up"></i></div>
+            <div class="stat-info">
+                <p class="stat-value" id="admin-stat-upcoming">--</p>
+                <h3>Upcoming</h3>
+            </div>
+        </div>
+        <div class="stat-card color-pink">
+            <div class="stat-icon"><i data-lucide="layers"></i></div>
+            <div class="stat-info">
+                <p class="stat-value" id="admin-stat-categories">--</p>
+                <h3>Categories</h3>
+            </div>
+        </div>
+        <div class="stat-card color-light-purple">
+            <div class="stat-icon"><i data-lucide="map-pin"></i></div>
+            <div class="stat-info">
+                <p class="stat-value" id="admin-stat-venues">--</p>
+                <h3>Venues</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Card table -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Active Events Registry</h2>
+            <div class="search-box" style="position: relative; width: 240px;">
+                <i data-lucide="search" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-muted);"></i>
+                <input type="text" id="admin-search-input" placeholder="Search events..." class="search-input" style="width: 100%; padding: 8px 12px 8px 34px; font-size: 0.85rem;" />
+            </div>
+        </div>
+        <div class="card-body" style="padding: 0;">
+            <div id="admin-list-loader" class="list-loader" style="padding: 40px 0;">
+                <span class="spinner"></span> Loading database records...
+            </div>
+            
+            <div id="admin-list-error" class="state-message" style="display: none; padding: 40px 24px;">
+                <div class="state-icon" style="background-color: #fef2f2; color: #ef4444;"><i data-lucide="alert-triangle"></i></div>
+                <h3>Failed to load records</h3>
+                <p>Could not connect to the database. Verify connection parameters.</p>
+                <button class="btn btn-primary mt-3" onclick="loadAdminEvents()">Retry</button>
+            </div>
+
+            <div id="admin-list-empty" class="state-message" style="display: none; padding: 60px 24px;">
+                <div class="state-icon"><i data-lucide="folder-open"></i></div>
+                <h3>No events registered</h3>
+                <p>Start by creating your first event using the button above.</p>
+            </div>
+
+            <div class="table-responsive" style="overflow-x: auto;">
+                <table class="admin-table" id="admin-table" style="display: none; width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--border-color); background-color: var(--bg-main);">
+                            <th style="padding: 16px 24px; font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Event Title</th>
+                            <th style="padding: 16px 24px; font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Category</th>
+                            <th style="padding: 16px 24px; font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Date & Time</th>
+                            <th style="padding: 16px 24px; font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Venue</th>
+                            <th style="padding: 16px 24px; font-weight: 600; color: var(--text-muted); font-size: 0.85rem;">Capacity</th>
+                            <th style="padding: 16px 24px; font-weight: 600; color: var(--text-muted); font-size: 0.85rem; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-table-body">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const MONTH_NAMES_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    function formatDateShort(dateStr) {
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        const month = MONTH_NAMES_SHORT[parseInt(parts[1], 10) - 1] || '?';
+        return `${month} ${parseInt(parts[2], 10)}, ${parts[0]}`;
+    }
+
+    function isUpcoming(dateStr) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return new Date(dateStr + 'T00:00:00') >= today;
+    }
+
+    let adminEvents = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const token = sessionStorage.getItem('adminVerified');
+        
+        if (token === 'true') {
+            showAdminDashboard();
+        } else {
+            showAdminLogin();
+        }
+
+        // Login Handler
+        const pswInput = document.getElementById('admin-password');
+        const loginBtn = document.getElementById('btn-login-verify');
+        const errorMsg = document.getElementById('login-error-msg');
+
+        function triggerLogin() {
+            const password = pswInput.value;
+            errorMsg.style.display = 'none';
+
+            if (!password) {
+                errorMsg.textContent = 'Please enter a password.';
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<span class="spinner" style="border-top-color: white;"></span> Verifying...';
+
+            fetch('/api/events/admin/verify', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password: password })
+            })
+            .then(res => {
+                if (res.ok) return res.json();
+                throw new Error('Unauthorized');
+            })
+            .then(data => {
+                sessionStorage.setItem('adminVerified', 'true');
+                sessionStorage.setItem('adminPassword', password);
+                showAdminDashboard();
+            })
+            .catch(err => {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Verify & Access';
+                errorMsg.textContent = 'Incorrect password. Try again.';
+                errorMsg.style.display = 'block';
+                pswInput.value = '';
+                pswInput.focus();
+            });
+        }
+
+        if (loginBtn) loginBtn.addEventListener('click', triggerLogin);
+        if (pswInput) {
+            pswInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') triggerLogin();
+            });
+        }
+
+        // Logout Handler
+        const logoutBtn = document.getElementById('btn-logout');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                sessionStorage.removeItem('adminVerified');
+                sessionStorage.removeItem('adminPassword');
+                window.location.reload();
+            });
+        }
+
+        // Search Input
+        const searchInput = document.getElementById('admin-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                const query = searchInput.value.toLowerCase();
+                renderTable(adminEvents.filter(e => 
+                    e.title.toLowerCase().includes(query) || 
+                    e.venue.toLowerCase().includes(query) ||
+                    e.category.toLowerCase().includes(query)
+                ));
+            });
+        }
+    });
+
+    function showAdminLogin() {
+        document.getElementById('admin-login-view').style.display = 'block';
+        document.getElementById('admin-dashboard-view').style.display = 'none';
+        document.getElementById('admin-password').focus();
+    }
+
+    function showAdminDashboard() {
+        document.getElementById('admin-login-view').style.display = 'none';
+        document.getElementById('admin-dashboard-view').style.display = 'block';
+        loadAdminEvents();
+    }
+
+    function loadAdminEvents() {
+        const loader = document.getElementById('admin-list-loader');
+        const error  = document.getElementById('admin-list-error');
+        const empty  = document.getElementById('admin-list-empty');
+        const table  = document.getElementById('admin-table');
+
+        loader.style.display = 'flex';
+        error.style.display = 'none';
+        empty.style.display = 'none';
+        table.style.display = 'none';
+
+        fetch('/api/events')
+            .then(res => {
+                if (!res.ok) throw new Error('API error');
+                return res.json();
+            })
+            .then(data => {
+                adminEvents = data;
+                loader.style.display = 'none';
+                
+                // Calculate Stats
+                const upcomingCount = data.filter(e => isUpcoming(e.date)).length;
+                const categories = new Set(data.map(e => e.category)).size;
+                const venues = new Set(data.map(e => e.venue)).size;
+
+                document.getElementById('admin-stat-total').textContent = data.length;
+                document.getElementById('admin-stat-upcoming').textContent = upcomingCount;
+                document.getElementById('admin-stat-categories').textContent = categories;
+                document.getElementById('admin-stat-venues').textContent = venues;
+
+                renderTable(data);
+            })
+            .catch(err => {
+                console.error(err);
+                loader.style.display = 'none';
+                error.style.display = 'flex';
+            });
+    }
+
+    function renderTable(events) {
+        const table = document.getElementById('admin-table');
+        const empty = document.getElementById('admin-list-empty');
+        const tbody = document.getElementById('admin-table-body');
+
+        if (events.length === 0) {
+            table.style.display = 'none';
+            empty.style.display = 'flex';
+            return;
+        }
+
+        empty.style.display = 'none';
+        tbody.innerHTML = '';
+
+        events.forEach(evt => {
+            const upcoming = isUpcoming(evt.date);
+            const statusClass = upcoming ? 'status-upcoming' : 'status-past';
+            const statusLabel = upcoming ? 'Upcoming' : 'Past';
+
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--border-color)';
+            tr.innerHTML = `
+                <td style="padding: 16px 24px; font-weight: 600;">
+                    <a href="/event/${evt.id}" class="btn-link" style="color: var(--secondary); font-weight:600;">${evt.title}</a>
+                    <span class="event-status ${statusClass}" style="font-size:0.75rem; padding: 2px 8px; margin-left: 8px;">${statusLabel}</span>
+                </td>
+                <td style="padding: 16px 24px;">
+                    <span class="badge badge-primary" style="margin-bottom:0; font-size:0.75rem;">${evt.category}</span>
+                </td>
+                <td style="padding: 16px 24px; font-size:0.9rem; color: var(--text-muted);">
+                    <strong>${formatDateShort(evt.date)}</strong> at ${evt.time}
+                </td>
+                <td style="padding: 16px 24px; font-size:0.9rem; color: var(--text-muted);">${evt.venue}</td>
+                <td style="padding: 16px 24px; font-size:0.9rem; color: var(--text-muted);">
+                    ${evt.max_attendees ? `${evt.max_attendees.toLocaleString()} seats` : 'Open'}
+                </td>
+                <td style="padding: 16px 24px; text-align: right; white-space: nowrap;">
+                    <a href="/admin/events/edit/${evt.id}" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; margin-right: 8px;">
+                        <i data-lucide="edit-2" style="width:14px; height:14px;"></i> Edit
+                    </a>
+                    <button class="btn btn-outline" onclick="deleteEventRecord('${evt.id}', '${evt.title.replace(/'/g, "\\'")}')" style="padding: 6px 12px; font-size: 0.8rem; border-color: #ef4444; color: #ef4444;">
+                        <i data-lucide="trash-2" style="width:14px; height:14px;"></i> Delete
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        table.style.display = 'table';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function deleteEventRecord(id, title) {
+        if (!confirm(`Are you sure you want to delete the event "${title}"?`)) {
+            return;
+        }
+
+        const password = sessionStorage.getItem('adminPassword') || 'root';
+
+        fetch(`/api/events/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Admin-Password': password
+            }
+        })
+        .then(res => {
+            if (res.ok) {
+                alert('Event deleted successfully.');
+                loadAdminEvents();
+            } else if (res.status === 401) {
+                alert('Session expired or unauthorized. Please re-login.');
+                sessionStorage.removeItem('adminVerified');
+                window.location.reload();
+            } else {
+                alert('Failed to delete event.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('A network error occurred.');
+        });
+    }
+</script>
+{% endblock %}

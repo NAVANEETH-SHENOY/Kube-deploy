@@ -1,0 +1,57 @@
+<aside class="app-sidebar" id="app-sidebar">
+    <div class="sidebar-header">
+        <div class="logo">
+            <div class="logo-icon">
+                <i data-lucide="calendar-days"></i>
+            </div>
+            <span class="logo-text">EventOps</span>
+        </div>
+        <button id="sidebar-close" class="icon-btn mobile-only" aria-label="Close Menu">
+            <i data-lucide="x"></i>
+        </button>
+    </div>
+    
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <span class="nav-section-title">MAIN</span>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Overview</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/events" class="nav-link {% if active_page == 'events' %}active{% endif %}">
+                        <i data-lucide="calendar"></i>
+                        <span>Events</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/admin" class="nav-link {% if active_page == 'admin' %}active{% endif %}">
+                        <i data-lucide="lock"></i>
+                        <span>Manage Events</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/about" class="nav-link {% if active_page == 'about' %}active{% endif %}">
+                        <i data-lucide="info"></i>
+                        <span>About</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-section">
+            <span class="nav-section-title">DEVOPS</span>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="/status" class="nav-link {% if active_page == 'status' %}active{% endif %}">
+                        <i data-lucide="activity"></i>
+                        <span>Status</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>

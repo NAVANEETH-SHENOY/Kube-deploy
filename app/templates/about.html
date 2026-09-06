@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% set active_page = 'about' %}
+
+{% block title %}About - EventOps{% endblock %}
+
+{% block content %}
+<style>
+    .about-section {
+        margin-bottom: 48px;
+    }
+    
+    .about-header {
+        margin-bottom: 24px;
+    }
+    
+    .about-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        justify-content: flex-start;
+        margin-top: 24px;
+    }
+
+    .artist-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        width: 170px;
+        padding: 20px 16px;
+        border-radius: 16px;
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+        cursor: pointer;
+    }
+
+    .artist-card:hover {
+        background-color: var(--bg-main);
+        border-color: var(--primary-light);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .artist-image-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin-bottom: 16px;
+        border-radius: 50%;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        border: 2px solid var(--border-color);
+        background-color: var(--bg-main);
+    }
+
+    .artist-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: var(--transition);
+    }
+
+    .artist-card:hover .artist-image {
+        transform: scale(1.08);
+    }
+
+    .artist-name {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--secondary);
+        margin-bottom: 4px;
+        line-height: 1.2;
+    }
+
+    .artist-subtext {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .project-info-card {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 40px;
+    }
+    
+    .tech-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+    }
+    
+    .tech-badge {
+        padding: 6px 12px;
+        background-color: var(--bg-main);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+</style>
+
+<div class="page-header" style="margin-bottom: 32px;">
+    <div>
+        <h1 class="page-title">About the Project</h1>
+        <p class="page-subtitle">Background information on the platform, its developers, and supervisors.</p>
+    </div>
+</div>
+
+<div class="project-info-card">
+    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--secondary); margin-bottom: 12px;">EventOps Portal</h2>
+    <p style="color: var(--text-muted); line-height: 1.7; margin-bottom: 16px;">
+        EventOps is an integrated campus event management platform designed to simplify creating, exploring, and participating in academic, technical, and cultural activities. Built with modern web development practices, it features automated liveness and readiness monitoring designed to showcase containerized deployment and CI/CD automation pipelines.
+    </p>
+    <p style="color: var(--text-muted); line-height: 1.7;">
+        The system allows event organizers to coordinate details, manage capacities, and export secure registration details, while offering participants a fluid overview dashboard, list filters, and instant QR-code registration badges.
+    </p>
+    
+    <div class="tech-badges">
+        <span class="tech-badge">FastAPI</span>
+        <span class="tech-badge">MongoDB</span>
+        <span class="tech-badge">Jinja2</span>
+        <span class="tech-badge">Docker</span>
+        <span class="tech-badge">Jenkins</span>
+        <span class="tech-badge">Kubernetes</span>
+        <span class="tech-badge">Pydantic v2</span>
+        <span class="tech-badge">Vanilla JS & CSS</span>
+    </div>
+</div>
+
+<div class="about-section">
+    <div class="about-header">
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--secondary);">Project Developers</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">The student engineering team behind EventOps.</p>
+    </div>
+    
+    <div class="about-grid">
+        <!-- Developer 1: Shubham Kr Singh -->
+        <div class="artist-card">
+            <div class="artist-image-container">
+                <img src="/static/images/shubham.png" alt="Shubham Kr Singh" class="artist-image" />
+            </div>
+            <div class="artist-name">Shubham Kr Singh</div>
+            <div class="artist-subtext">4NI23CS204</div>
+            <div class="artist-subtext" style="font-weight: 500; color: var(--primary); margin-top: 4px;">Developer</div>
+        </div>
+
+        <!-- Developer 2: Sinchana V -->
+        <div class="artist-card">
+            <div class="artist-image-container">
+                <img src="/static/images/sinchana.png" alt="Sinchana V" class="artist-image" />
+            </div>
+            <div class="artist-name">Sinchana V</div>
+            <div class="artist-subtext">4NI23CS208</div>
+            <div class="artist-subtext" style="font-weight: 500; color: var(--primary); margin-top: 4px;">Developer</div>
+        </div>
+    </div>
+</div>
+
+<div class="about-section">
+    <div class="about-header">
+        <h2 style="font-size: 1.3rem; font-weight: 700; color: var(--secondary);">Faculty Supervisors</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Guiding professors overseeing the project development.</p>
+    </div>
+    
+    <div class="about-grid">
+        <!-- Faculty 1: Prajwal Joyal -->
+        <div class="artist-card">
+            <div class="artist-image-container">
+                <img src="/static/images/prajwal.png" alt="Prajwal Joyan" class="artist-image" />
+            </div>
+            <div class="artist-name">Prajwal Joyan</div>
+            <div class="artist-subtext">Faculty Coordinator</div>
+            <div class="artist-subtext" style="font-weight: 500; color: var(--primary); margin-top: 4px;">Advisor</div>
+        </div>
+
+        <!-- Faculty 2: Adnan Sani -->
+        <div class="artist-card">
+            <div class="artist-image-container">
+                <img src="/static/images/adnan.png" alt="Mohammad Adnan" class="artist-image" />
+            </div>
+            <div class="artist-name">Mohammad Adnan</div>
+            <div class="artist-subtext">Faculty Coordinator</div>
+            <div class="artist-subtext" style="font-weight: 500; color: var(--primary); margin-top: 4px;">Advisor</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

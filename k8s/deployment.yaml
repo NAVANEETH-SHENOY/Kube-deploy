@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventapp
+  labels:
+    app: eventapp
+spec:
+  replicas: 2                       # start with 2; HPA will take over
+  selector:
+    matchLabels:
+      app: eventapp
+  template:
+    metadata:
+      labels:
+        app: eventapp
+    spec:
+      containers:
+        - name: eventapp
+          image: eventapp:latest # sinchana1705/eventapp:latest
+          imagePullPolicy: IfNotPresent   # tells K8s not to try pulling from registry
+          ports:
+            - containerPort: 8000
+          env:
+            - name: APP_VERSION
+              value: "v1"
+            - name: BUILD_NUMBER
+              value: "1"
+            - name: ENVIRONMENT
+              value: "production"
+            - name: MONGO_URL
+              value: "mongodb://mongo:27017"
+            - name: MONGO_DB_NAME
+              value: "eventapp"
+            - name: PORT
+              value: "8000"
+            - name: WORKERS
+              value: "2"
+
+          # ── Resource requests/limits (REQUIRED for HPA to work) ──────────
+          resources:
+            requests:
+              cpu: "250m"           # HPA reads against this baseline
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          # ── Liveness probe — uses your /health endpoint ──────────────────
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 3
+
+          # ── Readiness probe — uses your /ready endpoint ──────────────────
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% set active_page = 'dashboard' %}
+
+{% block title %}Overview - EventOps{% endblock %}
+
+{% block content %}
+<div class="overview-hero">
+    <div class="overview-hero-content">
+        <h1>Hi, Admin User</h1>
+        <p>Ready to start organizing your events today?</p>
+    </div>
+    <div class="overview-hero-illustration">
+        <img src="/static/images/undraw_mello_uiud.svg" alt="Overview Hero Image" height="200" width="200"> </div>
+</div>
+
+<div class="page-header">
+    <div>
+        <h2 class="section-title">Overview</h2>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card color-yellow">
+        <div class="stat-icon">
+            <i data-lucide="calendar"></i>
+        </div>
+        <div class="stat-info">
+            <p class="stat-value" id="stat-total">--</p>
+            <h3>Total Events</h3>
+        </div>
+    </div>
+    <div class="stat-card color-dark-purple">
+        <div class="stat-icon">
+            <i data-lucide="trending-up"></i>
+        </div>
+        <div class="stat-info">
+            <p class="stat-value" id="stat-upcoming">--</p>
+            <h3>Upcoming</h3>
+        </div>
+    </div>
+    <div class="stat-card color-pink">
+        <div class="stat-icon">
+            <i data-lucide="layers"></i>
+        </div>
+        <div class="stat-info">
+            <p class="stat-value" id="stat-categories">--</p>
+            <h3>Categories</h3>
+        </div>
+    </div>
+    <div class="stat-card color-light-purple">
+        <div class="stat-icon">
+            <i data-lucide="map-pin"></i>
+        </div>
+        <div class="stat-info">
+            <p class="stat-value" id="stat-venues">--</p>
+            <h3>Venues</h3>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-content">
+    <div class="card recent-events-card">
+        <div class="card-header">
+            <h2>Upcoming Events</h2>
+            <a href="/events" class="btn btn-link">View All</a>
+        </div>
+        <div class="card-body">
+            <div class="event-list" id="recent-events-list">
+                <div style="padding: 20px; text-align: center; color: #6b7280;">
+                    Loading events...
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

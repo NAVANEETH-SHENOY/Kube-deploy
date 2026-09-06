@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% set active_page = 'events' %}
+
+{% block title %}Events - EventOps{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">All Events</h1>
+        <p class="page-subtitle">Manage and track your upcoming and past events.</p>
+    </div>
+    <div class="header-actions">
+        <div class="filter-group hide-mobile" id="filter-group">
+            <button class="btn btn-outline active" data-filter="all">All</button>
+            <button class="btn btn-outline" data-filter="upcoming">Upcoming</button>
+            <button class="btn btn-outline" data-filter="past">Past</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loader -->
+<div id="events-loader" class="loader-container">
+    <div class="skeleton-grid">
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w-3-4"></div><div class="skeleton-line w-1-2"></div><div class="skeleton-line w-1-3"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w-3-4"></div><div class="skeleton-line w-1-2"></div><div class="skeleton-line w-1-3"></div></div></div>
+        <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line w-3-4"></div><div class="skeleton-line w-1-2"></div><div class="skeleton-line w-1-3"></div></div></div>
+    </div>
+</div>
+
+<!-- Error state -->
+<div id="events-error" class="state-message" style="display:none;">
+    <div class="state-icon"><i data-lucide="wifi-off"></i></div>
+    <h3>Could not load events</h3>
+    <p>There was a problem reaching the server. Please try again.</p>
+    <button class="btn btn-primary mt-4" onclick="loadEvents()">Retry</button>
+</div>
+
+<!-- Empty state -->
+<div id="events-empty" class="state-message" style="display:none;">
+    <div class="state-icon"><i data-lucide="calendar-x"></i></div>
+    <h3>No events found</h3>
+    <p>There are no events matching this filter yet.</p>
+</div>
+
+<!-- Grid populated by JS -->
+<div class="events-grid" id="events-grid" style="display:none;"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+    // Category → gradient mapping for card banners
+    const CATEGORY_GRADIENTS = {
+        "Technical":  "linear-gradient(135deg,#e0e7ff 0%,#c7d2fe 100%)",
+        "Cultural":   "linear-gradient(135deg,#fce7f3 0%,#fbcfe8 100%)",
+        "Sports":     "linear-gradient(135deg,#dcfce7 0%,#bbf7d0 100%)",
+        "Academic":   "linear-gradient(135deg,#fef9c3 0%,#fef08a 100%)",
+        "Other":      "linear-gradient(135deg,#f3e8ff 0%,#e9d5ff 100%)",
+    };
+
+    let allEvents = [];
+    let activeFilter = 'all';
+
+    function formatDate(dateStr) {
+        // dateStr = "YYYY-MM-DD"
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        const month = MONTH_NAMES[parseInt(parts[1], 10) - 1] || '?';
+        return `${month} ${parseInt(parts[2], 10)}, ${parts[0]}`;
+    }
+
+    function isUpcoming(dateStr) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const evtDate = new Date(dateStr + 'T00:00:00');
+        return evtDate >= today;
+    }
+
+    function buildCard(evt) {
+        const gradient = CATEGORY_GRADIENTS[evt.category] || CATEGORY_GRADIENTS["Other"];
+        const maxAttendeesHtml = evt.max_attendees
+            ? `<span><i data-lucide="users"></i> Max ${evt.max_attendees.toLocaleString()}</span>`
+            : `<span><i data-lucide="users"></i> Open attendance</span>`;
+        const upcoming = isUpcoming(evt.date);
+        const statusClass = upcoming ? 'status-upcoming' : 'status-past';
+        const statusLabel = upcoming ? 'Upcoming' : 'Past';
+
+        return `
+        <a href="/event/${evt.id}" class="event-card">
+            <div class="event-image">
+                <div class="event-category">${evt.category}</div>
+                <div class="placeholder-img" style="background:${gradient};height:160px;"></div>
+                <span class="event-status-badge ${statusClass}">${statusLabel}</span>
+            </div>
+            <div class="event-card-content">
+                <h3 class="event-title">${evt.title}</h3>
+                <div class="event-meta">
+                    <span><i data-lucide="calendar"></i> ${formatDate(evt.date)}</span>
+                    <span><i data-lucide="clock"></i> ${evt.time}</span>
+                    <span><i data-lucide="map-pin"></i> ${evt.venue}</span>
+                    ${maxAttendeesHtml}
+                </div>
+            </div>
+        </a>`;
+    }
+
+    function renderFiltered() {
+        const grid = document.getElementById('events-grid');
+        const empty = document.getElementById('events-empty');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        let filtered = allEvents;
+        if (activeFilter === 'upcoming') {
+            filtered = allEvents.filter(e => isUpcoming(e.date));
+        } else if (activeFilter === 'past') {
+            filtered = allEvents.filter(e => !isUpcoming(e.date));
+        }
+
+        if (filtered.length === 0) {
+            grid.style.display = 'none';
+            empty.style.display = 'flex';
+        } else {
+            empty.style.display = 'none';
+            grid.innerHTML = filtered.map(buildCard).join('');
+            grid.style.display = 'grid';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
+
+    function loadEvents() {
+        const loader = document.getElementById('events-loader');
+        const grid   = document.getElementById('events-grid');
+        const error  = document.getElementById('events-error');
+        const empty  = document.getElementById('events-empty');
+
+        loader.style.display = 'block';
+        grid.style.display   = 'none';
+        error.style.display  = 'none';
+        empty.style.display  = 'none';
+
+        fetch('/api/events')
+            .then(res => {
+                if (!res.ok) throw new Error('API error ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                allEvents = data;
+                loader.style.display = 'none';
+                renderFiltered();
+            })
+            .catch(err => {
+                console.error(err);
+                loader.style.display = 'none';
+                error.style.display  = 'flex';
+            });
+    }
+
+    // Filter button wiring
+    document.querySelectorAll('#filter-group .btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#filter-group .btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeFilter = btn.dataset.filter;
+            renderFiltered();
+        });
+    });
+
+    loadEvents();
+</script>
+{% endblock %}

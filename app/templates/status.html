@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}DevOps Status — EventOps{% endblock %}
+
+{% block head %}
+<style>
+  /* ── Status grid ── */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .stat-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+    margin-bottom: .4rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    word-break: break-all;
+  }
+
+  .stat-value.mono {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    margin-top: .2rem;
+  }
+
+  /* ── Probe badges ── */
+  .probe-row {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .5rem;
+    font-size: .9rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .25rem .7rem;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 600;
+  }
+
+  .badge.ok   { background: var(--success-light); color: #065f46; }
+  .badge.fail { background: #fee2e2; color: #991b1b; }
+  .badge.checking { background: var(--info-light); color: #0369a1; }
+
+  .badge .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .badge.ok   .dot { background: var(--success); }
+  .badge.fail .dot { background: #ef4444; }
+  .badge.checking .dot { background: var(--info); animation: pulse 1s infinite; }
+
+  @keyframes pulse {
+    0%,100% { opacity:1; } 50% { opacity:.3; }
+  }
+
+  /* ── Load trigger section ── */
+  .load-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+  }
+
+  .load-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: .25rem;
+  }
+
+  .load-card p {
+    font-size: .85rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .load-controls {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+
+  .duration-input {
+    width: 90px;
+    padding: .45rem .75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: .9rem;
+    color: var(--text-main);
+    background: var(--bg-main);
+  }
+
+  .btn-trigger {
+    padding: .5rem 1.25rem;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: .9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .btn-trigger:hover:not(:disabled) { background: var(--primary-dark); }
+  .btn-trigger:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* ── Timer bar ── */
+  .timer-wrap { display: none; margin-top: 1rem; }
+  .timer-wrap.active { display: block; }
+
+  .timer-bar-bg {
+    height: 8px;
+    background: var(--border-color);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: .5rem;
+  }
+
+  .timer-bar-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 999px;
+    transition: width .9s linear;
+  }
+
+  .timer-label {
+    font-size: .8rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Probes section ── */
+  .probes-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .probes-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .probe-name {
+    font-size: .85rem;
+    font-weight: 500;
+    min-width: 80px;
+    color: var(--text-muted);
+  }
+
+  .probe-path {
+    font-family: monospace;
+    font-size: .8rem;
+    color: var(--text-muted);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom:1.5rem;">
+  <div>
+    <h1 class="page-title">DevOps Status</h1>
+    <p class="page-subtitle" style="color:var(--text-muted);font-size:.9rem;margin-top:.25rem;">
+      Live pod info, health probes, and HPA load trigger
+    </p>
+  </div>
+  <button onclick="refreshAll()" class="btn-trigger" style="margin-left:auto;">
+    <i data-lucide="refresh-cw" style="width:15px;height:15px;"></i> Refresh
+  </button>
+</div>
+
+<!-- ── Stat cards ── -->
+<div class="status-grid">
+  <div class="stat-card">
+    <div class="stat-label">Version</div>
+    <div class="stat-value" id="val-version">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Build</div>
+    <div class="stat-value" id="val-build">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Environment</div>
+    <div class="stat-value" id="val-env">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Pod Hostname</div>
+    <div class="stat-value mono" id="val-hostname">—</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Uptime</div>
+    <div class="stat-value" id="val-uptime">—</div>
+  </div>
+</div>
+
+<!-- ── Probes ── -->
+<div class="probes-card" style="margin-bottom:1.5rem;">
+  <h3>Health Probes</h3>
+
+  <div class="probe-row">
+    <span class="probe-name">Liveness</span>
+    <span class="probe-path">/health</span>
+    <span class="badge checking" id="badge-health">
+      <span class="dot"></span> checking…
+    </span>
+  </div>
+
+  <div class="probe-row">
+    <span class="probe-name">Readiness</span>
+    <span class="probe-path">/ready</span>
+    <span class="badge checking" id="badge-ready">
+      <span class="dot"></span> checking…
+    </span>
+  </div>
+</div>
+
+<!-- ── Load trigger ── -->
+<div class="load-card">
+  <h3>🔥 Trigger CPU Load</h3>
+  <p>Burns CPU across all cores for N seconds — watch <code>kubectl get hpa -w</code> scale pods up in real time.</p>
+
+  <div class="load-controls">
+    <label style="font-size:.85rem;font-weight:500;">Duration (s)</label>
+    <input type="number" id="duration-input" class="duration-input" value="30" min="5" max="120">
+    <button class="btn-trigger" id="load-btn" onclick="triggerLoad()">
+      <i data-lucide="zap" style="width:15px;height:15px;"></i> Trigger Load
+    </button>
+    <span id="load-status" style="font-size:.85rem;color:var(--text-muted);"></span>
+  </div>
+
+  <div class="timer-wrap" id="timer-wrap">
+    <div class="timer-bar-bg">
+      <div class="timer-bar-fill" id="timer-bar" style="width:100%"></div>
+    </div>
+    <div class="timer-label" id="timer-label">Loading…</div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ── Fetch version info ────────────────────────────────────────────────────
+  async function fetchVersion() {
+    try {
+      const r = await fetch('/version');
+      const d = await r.json();
+      document.getElementById('val-version').textContent  = d.version   ?? '—';
+      document.getElementById('val-build').textContent    = d.build     ?? '—';
+      document.getElementById('val-env').textContent      = d.environment ?? '—';
+      document.getElementById('val-hostname').textContent = d.hostname  ?? '—';
+      const up = d.uptime_seconds ?? 0;
+      const h = Math.floor(up/3600), m = Math.floor((up%3600)/60), s = up%60;
+      document.getElementById('val-uptime').textContent =
+        h ? `${h}h ${m}m` : m ? `${m}m ${s}s` : `${s}s`;
+    } catch { /* silent */ }
+  }
+
+  // ── Fetch probe status ────────────────────────────────────────────────────
+  async function fetchProbe(path, badgeId) {
+    const badge = document.getElementById(badgeId);
+    try {
+      const r = await fetch(path);
+      if (r.ok) {
+        badge.className = 'badge ok';
+        badge.innerHTML = '<span class="dot"></span> OK';
+      } else {
+        badge.className = 'badge fail';
+        badge.innerHTML = `<span class="dot"></span> ${r.status}`;
+      }
+    } catch {
+      badge.className = 'badge fail';
+      badge.innerHTML = '<span class="dot"></span> unreachable';
+    }
+  }
+
+  function refreshAll() {
+    fetchVersion();
+    fetchProbe('/health', 'badge-health');
+    fetchProbe('/ready',  'badge-ready');
+    lucide.createIcons();
+  }
+
+  // ── Load trigger ─────────────────────────────────────────────────────────
+  async function triggerLoad() {
+    const duration = parseInt(document.getElementById('duration-input').value) || 30;
+    const btn      = document.getElementById('load-btn');
+    const wrap     = document.getElementById('timer-wrap');
+    const bar      = document.getElementById('timer-bar');
+    const label    = document.getElementById('timer-label');
+    const status   = document.getElementById('load-status');
+
+    btn.disabled = true;
+    status.textContent = '';
+    wrap.classList.add('active');
+
+    // Animate the bar shrinking over `duration` seconds
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    // Force reflow
+    bar.getBoundingClientRect();
+    bar.style.transition = `width ${duration}s linear`;
+    bar.style.width = '0%';
+
+    // Countdown label
+    let remaining = duration;
+    label.textContent = `Running… ${remaining}s remaining`;
+    const ticker = setInterval(() => {
+      remaining--;
+      if (remaining > 0) {
+        label.textContent = `Running… ${remaining}s remaining`;
+      }
+    }, 1000);
+
+    try {
+      const r = await fetch(`/load?duration=${duration}`);
+      const d = await r.json();
+      clearInterval(ticker);
+      bar.style.transition = 'none';
+      bar.style.width = '100%';
+      label.textContent = `✅ Done — ${d.duration}s across ${d.cores_used} cores`;
+      status.textContent = 'Pods should scale down in ~3–5 min';
+    } catch {
+      clearInterval(ticker);
+      label.textContent = '❌ Request failed or timed out';
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Auto-refresh every 10s ────────────────────────────────────────────────
+  refreshAll();
+  setInterval(refreshAll, 10000);
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+
+  app:
+    build: .
+    container_name: eventapp
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      APP_VERSION: "v1"
+      BUILD_NUMBER: "0"
+      ENVIRONMENT: "development"
+      MONGO_URL: "mongodb://mongo:27017"
+      MONGO_DB_NAME: "eventapp"
+      PORT: "8000"
+      WORKERS: "2"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - eventnet
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7.0
+    container_name: eventapp-mongo
+    ports:
+      - "27017:27017"         # exposed for local dev access
+    volumes:
+      - mongo_data:/data/db   # persist data across container restarts
+    networks:
+      - eventnet
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  eventnet:
+    driver: bridge
+
+volumes:
+  mongo_data:

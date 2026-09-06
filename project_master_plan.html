@@ -1,0 +1,266 @@
+
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-sans); }
+.tabs { display: flex; gap: 4px; padding: 1rem 0 0; border-bottom: 1px solid var(--color-border-tertiary); }
+.tab { padding: 7px 16px; border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--color-text-secondary); border: none; background: none; }
+.tab.active { background: var(--color-background-secondary); color: var(--color-text-primary); border: 1px solid var(--color-border-tertiary); border-bottom: 1px solid var(--color-background-secondary); margin-bottom: -1px; }
+.panel { display: none; padding: 1.2rem 0; }
+.panel.active { display: block; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 12px; font-weight: 500; font-size: 11px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border-tertiary); text-transform: uppercase; letter-spacing: .04em; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--color-border-tertiary); vertical-align: top; color: var(--color-text-primary); }
+tr:last-child td { border-bottom: none; }
+
+.method { font-family: var(--font-mono); font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 4px; display: inline-block; white-space: nowrap; }
+.get    { background: #E6F1FB; color: #0C447C; }
+.post   { background: #EAF3DE; color: #27500A; }
+.delete { background: #FCEBEB; color: #791F1F; }
+.put    { background: #FAEEDA; color: #633806; }
+.path   { font-family: var(--font-mono); font-size: 12px; }
+.note   { font-size: 11px; color: var(--color-text-secondary); }
+.tag    { font-size: 10px; padding: 2px 6px; border-radius: 3px; font-weight: 500; display: inline-block; }
+.tag-k8s   { background: #EEEDFE; color: #3C3489; }
+.tag-demo  { background: #E1F5EE; color: #085041; }
+.tag-hpa   { background: #FAECE7; color: #712B13; }
+.sec-row td { background: var(--color-background-secondary); font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .05em; padding: 5px 12px; }
+
+.page-card { border: 1px solid var(--color-border-tertiary); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+.page-header { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--color-background-secondary); }
+.page-route { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--color-text-primary); }
+.page-name  { font-size: 12px; color: var(--color-text-secondary); }
+.page-body  { padding: 10px 14px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+.page-body ul { margin: 4px 0; padding-left: 16px; }
+.page-body li { margin-bottom: 2px; }
+
+.phase { border-left: 3px solid var(--color-border-tertiary); padding: 0 0 16px 16px; margin-bottom: 0; position: relative; }
+.phase:last-child { border-left: 3px solid transparent; padding-bottom: 0; }
+.phase-dot { width: 10px; height: 10px; border-radius: 50%; position: absolute; left: -6.5px; top: 2px; }
+.phase-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+.phase-sub   { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+.phase-tasks { font-size: 12px; color: var(--color-text-secondary); line-height: 1.7; }
+
+.days { display: flex; gap: 6px; flex-wrap: wrap; }
+.day  { background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); border-radius: 6px; padding: 8px 10px; font-size: 12px; min-width: 100px; flex: 1; }
+.day-num { font-weight: 500; font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 4px; }
+.day-task { font-size: 12px; color: var(--color-text-primary); }
+.day-focus { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+@media (prefers-color-scheme: dark) {
+  .get  { background: #0C447C; color: #B5D4F4; }
+  .post { background: #27500A; color: #C0DD97; }
+  .delete { background: #791F1F; color: #F7C1C1; }
+  .put  { background: #633806; color: #FAC775; }
+  .tag-k8s  { background: #3C3489; color: #CECBF6; }
+  .tag-demo { background: #085041; color: #9FE1CB; }
+  .tag-hpa  { background: #712B13; color: #F5C4B3; }
+}
+</style>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('endpoints')">API Endpoints</button>
+  <button class="tab" onclick="show('pages')">Pages</button>
+  <button class="tab" onclick="show('phases')">Setup Phases</button>
+  <button class="tab" onclick="show('timeline')">Timeline</button>
+</div>
+
+<!-- ENDPOINTS -->
+<div id="endpoints" class="panel active">
+<table>
+  <thead><tr><th>Method</th><th>Path</th><th>Purpose</th><th>Returns</th><th>Tag</th></tr></thead>
+  <tbody>
+    <tr class="sec-row"><td colspan="5">Events — core app</td></tr>
+    <tr>
+      <td><span class="method get">GET</span></td>
+      <td class="path">/api/events</td>
+      <td>List all events</td>
+      <td class="note">200 Event[]</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><span class="method post">POST</span></td>
+      <td class="path">/api/events</td>
+      <td>Create new event</td>
+      <td class="note">201 Event<br>422 validation fail</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><span class="method put">PUT</span></td>
+      <td class="path">/api/events/{id}</td>
+      <td>Update event — triggers rolling update demo</td>
+      <td class="note">200 Event<br>404 not found</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td><span class="method delete">DELETE</span></td>
+      <td class="path">/api/events/{id}</td>
+      <td>Delete event</td>
+      <td class="note">200 message<br>404 not found</td>
+      <td></td>
+    </tr>
+    <tr class="sec-row"><td colspan="5">DevOps utility — critical for demo</td></tr>
+    <tr>
+      <td><span class="method get">GET</span></td>
+      <td class="path">/health</td>
+      <td>Liveness probe — K8s checks this to know pod is alive</td>
+      <td class="note">200 {status:"ok"}</td>
+      <td><span class="tag tag-k8s">K8s probe</span></td>
+    </tr>
+    <tr>
+      <td><span class="method get">GET</span></td>
+      <td class="path">/ready</td>
+      <td>Readiness probe — K8s checks before sending traffic</td>
+      <td class="note">200 {ready:true}<br>503 if DB down</td>
+      <td><span class="tag tag-k8s">K8s probe</span></td>
+    </tr>
+    <tr>
+      <td><span class="method get">GET</span></td>
+      <td class="path">/version</td>
+      <td>Returns app version + build number — proves new deployment happened</td>
+      <td class="note">200 {version:"v2", build:"14"}</td>
+      <td><span class="tag tag-demo">Demo proof</span></td>
+    </tr>
+    <tr>
+      <td><span class="method get">GET</span></td>
+      <td class="path">/load</td>
+      <td>Burns CPU for N seconds — triggers HPA to scale pods up</td>
+      <td class="note">200 {status:"done", duration:30}</td>
+      <td><span class="tag tag-hpa">HPA trigger</span></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<!-- PAGES -->
+<div id="pages" class="panel">
+  <div class="page-card">
+    <div class="page-header">
+      <span class="page-route">/</span>
+      <span class="page-name">Home — Event listing</span>
+    </div>
+    <div class="page-body">
+      <ul>
+        <li>Fetch and display all events from <code>GET /api/events</code></li>
+        <li>Each card shows: title, date, venue, description</li>
+        <li>Delete button on each card → calls <code>DELETE /api/events/{id}</code></li>
+        <li>Button linking to → <strong>/add</strong></li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-card">
+    <div class="page-header">
+      <span class="page-route">/add</span>
+      <span class="page-name">Add Event form</span>
+    </div>
+    <div class="page-body">
+      <ul>
+        <li>Form fields: Title, Date, Time, Venue, Description</li>
+        <li>Submit → <code>POST /api/events</code></li>
+        <li>On success → redirect to <strong>/</strong></li>
+        <li>Show inline validation errors from 422 response</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-card">
+    <div class="page-header">
+      <span class="page-route">/status</span>
+      <span class="page-name">Status page — DevOps demo tool</span>
+    </div>
+    <div class="page-body">
+      <ul>
+        <li>Calls <code>/version</code> → shows current version + build number visibly</li>
+        <li>Calls <code>/health</code> → shows green/red indicator</li>
+        <li>Shows pod hostname (env var <code>HOSTNAME</code>) — proves multiple pods exist during scale</li>
+        <li>"Trigger Load" button → calls <code>/load?duration=30</code> with a live timer</li>
+        <li>This page is what you keep open during the demo</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- PHASES -->
+<div id="phases" class="panel">
+  <div class="phase">
+    <div class="phase-dot" style="background:#378ADD"></div>
+    <div class="phase-title">Phase 1 — Backend</div>
+    <div class="phase-sub">Days 1–2 · FastAPI + SQLite/MongoDB</div>
+    <div class="phase-tasks">
+      Set up FastAPI project structure · Write all 8 endpoints · Wire up DB models · Test every endpoint locally with curl or Postman · Add gunicorn to requirements.txt
+    </div>
+  </div>
+  <div class="phase">
+    <div class="phase-dot" style="background:#1D9E75"></div>
+    <div class="phase-title">Phase 2 — Frontend</div>
+    <div class="phase-sub">Day 2 · Plain HTML + JS (no frameworks)</div>
+    <div class="phase-tasks">
+      3 pages: index, add, status · Fetch calls from script.js · Status page shows version + load button · No CSS frameworks needed, keep it clean and simple
+    </div>
+  </div>
+  <div class="phase">
+    <div class="phase-dot" style="background:#BA7517"></div>
+    <div class="phase-title">Phase 3 — Docker</div>
+    <div class="phase-sub">Day 3 · Dockerfile + Docker Compose</div>
+    <div class="phase-tasks">
+      Write Dockerfile (python:3.11-slim, gunicorn, port 8000) · docker-compose.yml with app + MongoDB services · Test: docker compose up, verify app runs · Tag image with BUILD_NUMBER env var
+    </div>
+  </div>
+  <div class="phase">
+    <div class="phase-dot" style="background:#534AB7"></div>
+    <div class="phase-title">Phase 4 — Kubernetes</div>
+    <div class="phase-sub">Days 4–5 · minikube + manifests</div>
+    <div class="phase-tasks">
+      minikube start --cpus=4 --memory=6144 · Enable metrics-server addon (critical for HPA) · Write deployment.yaml: 2 replicas, CPU requests set, liveness + readiness probes pointing to /health and /ready · Write service.yaml: NodePort · Write hpa.yaml: min 1, max 5, cpu 50% · kubectl apply -f k8s/ and verify pods running
+    </div>
+  </div>
+  <div class="phase">
+    <div class="phase-dot" style="background:#D85A30"></div>
+    <div class="phase-title">Phase 5 — Jenkins</div>
+    <div class="phase-sub">Days 6–7 · Pipeline + webhook</div>
+    <div class="phase-tasks">
+      Run Jenkins in Docker (mount docker.sock) · Add credentials: Docker Hub (user+pass), kubeconfig (secret file) · Write Jenkinsfile: Clone → Test → Build → Push → Deploy (6 stages) · Set up GitHub webhook via ngrok · Verify end-to-end: push commit → watch pipeline run → new pod appears
+    </div>
+  </div>
+  <div class="phase">
+    <div class="phase-dot" style="background:#3B6D11"></div>
+    <div class="phase-title">Phase 6 — Demo + Docs</div>
+    <div class="phase-sub">Days 8–9 · Polish + report</div>
+    <div class="phase-tasks">
+      Rehearse full demo flow · Architecture diagram · README with setup steps · Record demo video as backup · Write report sections
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div id="timeline" class="panel">
+<div class="days">
+  <div class="day"><div class="day-num">Day 1</div><div class="day-task">FastAPI backend</div><div class="day-focus">All 8 endpoints, DB models, local test</div></div>
+  <div class="day"><div class="day-num">Day 2</div><div class="day-task">Frontend</div><div class="day-focus">3 pages, fetch calls, status page</div></div>
+  <div class="day"><div class="day-num">Day 3</div><div class="day-task">Docker</div><div class="day-focus">Dockerfile, Compose, push to Hub</div></div>
+  <div class="day"><div class="day-num">Day 4</div><div class="day-task">K8s setup</div><div class="day-focus">minikube, metrics-server, manifests</div></div>
+  <div class="day"><div class="day-num">Day 5</div><div class="day-task">K8s verify</div><div class="day-focus">HPA working, probes passing, scaling test</div></div>
+  <div class="day"><div class="day-num">Day 6</div><div class="day-task">Jenkins</div><div class="day-focus">Install, credentials, Jenkinsfile</div></div>
+  <div class="day"><div class="day-num">Day 7</div><div class="day-task">Webhook + E2E</div><div class="day-focus">ngrok, GitHub webhook, full pipeline test</div></div>
+  <div class="day"><div class="day-num">Day 8</div><div class="day-task">Demo rehearsal</div><div class="day-focus">Fix breakages, practice flow</div></div>
+  <div class="day"><div class="day-num">Day 9</div><div class="day-task">Docs + report</div><div class="day-focus">README, architecture diagram, report</div></div>
+</div>
+<div style="margin-top:14px; padding:10px 14px; background:var(--color-background-secondary); border-radius:8px; font-size:12px; color:var(--color-text-secondary); line-height:1.7">
+  <strong style="color:var(--color-text-primary)">Demo script (what to show in sequence):</strong><br>
+  1. Open /status — show version v1, build number, pod hostname<br>
+  2. Push a code change (bump version to v2) → Jenkins pipeline triggers automatically<br>
+  3. Watch pipeline stages pass in Jenkins UI<br>
+  4. Refresh /status → version now shows v2 (proves deployment worked)<br>
+  5. Click "Trigger Load" → watch kubectl get pods -w scale from 1 to 3–5 pods<br>
+  6. Stop load → pods scale back down (takes ~3–5 min)<br>
+  7. kubectl delete pod [name] → show it restart automatically
+</div>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>

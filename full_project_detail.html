@@ -1,0 +1,686 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); font-size: 13px; }
+
+.nav { display: flex; gap: 3px; padding: 1rem 0 0; flex-wrap: wrap; border-bottom: 1px solid var(--color-border-tertiary); margin-bottom: 0; }
+.nav-btn { padding: 6px 14px; border-radius: 6px 6px 0 0; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--color-text-secondary); border: none; background: none; transition: all .15s; }
+.nav-btn:hover { color: var(--color-text-primary); }
+.nav-btn.active { background: var(--color-background-secondary); color: var(--color-text-primary); border: 1px solid var(--color-border-tertiary); border-bottom: 1px solid var(--color-background-secondary); margin-bottom: -1px; }
+
+.panel { display: none; padding: 1.2rem 0; }
+.panel.active { display: block; }
+
+/* shared components */
+.section-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-tertiary); margin: 16px 0 8px; }
+.section-label:first-child { margin-top: 0; }
+.card { border: 1px solid var(--color-border-tertiary); border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+.card-head { display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: var(--color-background-secondary); border-bottom: 1px solid var(--color-border-tertiary); }
+.card-body { padding: 10px 14px; }
+.card-body ul { padding-left: 16px; }
+.card-body li { margin-bottom: 4px; line-height: 1.5; color: var(--color-text-secondary); }
+.card-body li strong { color: var(--color-text-primary); }
+.card-body p { color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 6px; }
+.card-body p:last-child { margin-bottom: 0; }
+
+.mono { font-family: var(--font-mono); font-size: 11px; }
+.badge { font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 500; display: inline-block; white-space: nowrap; }
+.b-blue   { background:#E6F1FB; color:#0C447C; }
+.b-green  { background:#EAF3DE; color:#27500A; }
+.b-red    { background:#FCEBEB; color:#791F1F; }
+.b-amber  { background:#FAEEDA; color:#633806; }
+.b-purple { background:#EEEDFE; color:#3C3489; }
+.b-teal   { background:#E1F5EE; color:#085041; }
+.b-gray   { background:var(--color-background-secondary); color:var(--color-text-secondary); border:1px solid var(--color-border-tertiary); }
+
+.method { font-family: var(--font-mono); font-size: 10px; font-weight: 500; padding: 2px 6px; border-radius: 3px; }
+.m-get    { background:#E6F1FB; color:#0C447C; }
+.m-post   { background:#EAF3DE; color:#27500A; }
+.m-del    { background:#FCEBEB; color:#791F1F; }
+.m-put    { background:#FAEEDA; color:#633806; }
+
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 7px 12px; font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); border-bottom: 1px solid var(--color-border-tertiary); text-transform: uppercase; letter-spacing: .04em; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--color-border-tertiary); vertical-align: top; color: var(--color-text-secondary); font-size: 12px; }
+td:first-child { color: var(--color-text-primary); }
+tr:last-child td { border-bottom: none; }
+.sec-td { background: var(--color-background-secondary); font-size: 10px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .05em; }
+
+/* Phase timeline */
+.timeline { padding: 4px 0; }
+.phase-row { display: flex; gap: 0; margin-bottom: 0; }
+.phase-spine { display: flex; flex-direction: column; align-items: center; width: 28px; flex-shrink: 0; }
+.phase-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+.phase-line { width: 2px; flex: 1; background: var(--color-border-tertiary); min-height: 12px; }
+.phase-row:last-child .phase-line { display: none; }
+.phase-content { padding: 0 0 20px 4px; flex: 1; }
+.phase-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 2px; }
+.phase-days { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 8px; }
+.task-list { list-style: none; padding: 0; }
+.task-list li { padding: 4px 0; color: var(--color-text-secondary); font-size: 12px; line-height: 1.5; display: flex; gap: 6px; align-items: flex-start; }
+.task-list li::before { content: '—'; color: var(--color-text-tertiary); flex-shrink: 0; }
+.task-list li.warn { color: var(--color-text-warning); }
+.task-list li.warn::before { content: '⚠'; }
+.deliverable { margin-top: 8px; padding: 6px 10px; background: var(--color-background-secondary); border-radius: 6px; font-size: 11px; color: var(--color-text-secondary); }
+.deliverable strong { color: var(--color-text-primary); }
+
+/* code block */
+pre { background: var(--color-background-secondary); border: 1px solid var(--color-border-tertiary); border-radius: 6px; padding: 10px 12px; font-family: var(--font-mono); font-size: 11px; overflow-x: auto; line-height: 1.6; color: var(--color-text-primary); white-space: pre; margin: 6px 0; }
+
+/* page layout mockup description */
+.page-zone { border: 1px dashed var(--color-border-tertiary); border-radius: 6px; padding: 8px 12px; margin-bottom: 6px; }
+.zone-label { font-size: 10px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.zone-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; }
+
+@media (prefers-color-scheme: dark) {
+  .b-blue   { background:#0C447C; color:#B5D4F4; }
+  .b-green  { background:#27500A; color:#C0DD97; }
+  .b-red    { background:#791F1F; color:#F7C1C1; }
+  .b-amber  { background:#633806; color:#FAC775; }
+  .b-purple { background:#3C3489; color:#CECBF6; }
+  .b-teal   { background:#085041; color:#9FE1CB; }
+  .m-get    { background:#0C447C; color:#B5D4F4; }
+  .m-post   { background:#27500A; color:#C0DD97; }
+  .m-del    { background:#791F1F; color:#F7C1C1; }
+  .m-put    { background:#633806; color:#FAC775; }
+}
+</style>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show('pages')">Pages</button>
+  <button class="nav-btn" onclick="show('endpoints')">Endpoints</button>
+  <button class="nav-btn" onclick="show('phases')">Phases</button>
+  <button class="nav-btn" onclick="show('files')">File Structure</button>
+  <button class="nav-btn" onclick="show('manifests')">K8s Manifests</button>
+  <button class="nav-btn" onclick="show('jenkins')">Jenkinsfile</button>
+  <button class="nav-btn" onclick="show('tests')">Tests + Edge Cases</button>
+</div>
+
+<!-- PAGES -->
+<div id="pages" class="panel active">
+
+<div class="section-label">Page 1 — / (Home / Event Listing)</div>
+<div class="card">
+  <div class="card-head"><span class="mono">/</span><span class="badge b-blue" style="margin-left:auto">Public</span></div>
+  <div class="card-body">
+    <div class="page-zone"><div class="zone-label">Navbar</div><div class="zone-desc">App name left · Nav links: Home, Add Event, Admin, Status · Version badge pulled from <span class="mono">/version</span> showing e.g. <span class="badge b-purple">v2 · build 14</span></div></div>
+    <div class="page-zone"><div class="zone-label">Hero strip</div><div class="zone-desc">Large heading "Campus Events" · Subtitle · Event count badge ("12 upcoming events")</div></div>
+    <div class="page-zone"><div class="zone-label">Filter bar</div><div class="zone-desc">Search input (client-side filter by title) · Date filter dropdown (All / Today / This Week / This Month) · Sort: Newest / Oldest / A–Z</div></div>
+    <div class="page-zone"><div class="zone-label">Event cards grid</div><div class="zone-desc">Each card: title (large), date + time pill, venue badge, description (truncated 2 lines), Edit button → /edit/{id}, Delete button → DELETE /api/events/{id} with confirmation · Empty state: illustration + "No events yet. Add the first one."</div></div>
+    <div class="page-zone"><div class="zone-label">Footer</div><div class="zone-desc">Pod hostname display (env HOSTNAME) — changes visibly when pods scale. This is a live DevOps indicator.</div></div>
+    <p style="margin-top:8px"><strong>API calls on load:</strong> <span class="method m-get">GET</span> <span class="mono">/api/events</span> · <span class="method m-get">GET</span> <span class="mono">/version</span></p>
+  </div>
+</div>
+
+<div class="section-label">Page 2 — /add (Add Event)</div>
+<div class="card">
+  <div class="card-head"><span class="mono">/add</span><span class="badge b-green" style="margin-left:auto">Form</span></div>
+  <div class="card-body">
+    <div class="page-zone"><div class="zone-label">Form fields</div><div class="zone-desc">
+      <strong>Title</strong> — text input, required, max 100 chars, char counter shown<br>
+      <strong>Description</strong> — textarea, required, max 500 chars<br>
+      <strong>Date</strong> — date picker, must be today or future (validate client + server)<br>
+      <strong>Time</strong> — time input (HH:MM)<br>
+      <strong>Venue</strong> — text input, required<br>
+      <strong>Category</strong> — dropdown: Technical / Cultural / Sports / Academic / Other<br>
+      <strong>Max Attendees</strong> — number input, optional, min 1
+    </div></div>
+    <div class="page-zone"><div class="zone-label">Validation behaviour</div><div class="zone-desc">Client-side: disable submit until required fields filled · Show red border + message inline per field · Server 422 errors map back to fields and show under the relevant input</div></div>
+    <div class="page-zone"><div class="zone-label">Submit flow</div><div class="zone-desc">Button shows spinner while request in flight · On 201: success toast + redirect to / after 1.5s · On error: error toast stays, form stays filled</div></div>
+    <p style="margin-top:8px"><strong>API calls:</strong> <span class="method m-post">POST</span> <span class="mono">/api/events</span></p>
+  </div>
+</div>
+
+<div class="section-label">Page 3 — /edit/{id} (Edit Event)</div>
+<div class="card">
+  <div class="card-head"><span class="mono">/edit/{id}</span><span class="badge b-amber" style="margin-left:auto">Form</span></div>
+  <div class="card-body">
+    <div class="page-zone"><div class="zone-label">Pre-filled form</div><div class="zone-desc">Same fields as /add · On page load fetches <span class="mono">GET /api/events/{id}</span> and pre-fills all fields · If ID not found → redirect to / with error toast</div></div>
+    <div class="page-zone"><div class="zone-label">Actions</div><div class="zone-desc">Save Changes → <span class="method m-put">PUT</span> /api/events/{id} → success toast + redirect to / · Cancel → back to / without saving · Delete from here too → same flow as home page delete</div></div>
+    <p style="margin-top:8px"><strong>Why this page matters for DevOps:</strong> This is what you change between v1 and v2 in the demo. Add this endpoint in a commit, push, watch Jenkins deploy it, then use it live.</p>
+  </div>
+</div>
+
+<div class="section-label">Page 4 — /admin (Admin Dashboard)</div>
+<div class="card">
+  <div class="card-head"><span class="mono">/admin</span><span class="badge b-purple" style="margin-left:auto">Dashboard</span></div>
+  <div class="card-body">
+    <div class="page-zone"><div class="zone-label">Stats row</div><div class="zone-desc">4 stat cards: Total Events · Upcoming Events · Past Events · Events This Week — all derived client-side from the events array</div></div>
+    <div class="page-zone"><div class="zone-label">Events table</div><div class="zone-desc">Columns: Title · Category · Date · Venue · Max Attendees · Actions (Edit / Delete) · Sortable by clicking column headers · Rows striped alternately</div></div>
+    <div class="page-zone"><div class="zone-label">Bulk actions</div><div class="zone-desc">Select checkboxes → Delete Selected button → confirmation modal → sends individual DELETE calls · "Add New Event" button top-right</div></div>
+    <p style="margin-top:8px"><strong>API calls on load:</strong> <span class="method m-get">GET</span> <span class="mono">/api/events</span></p>
+  </div>
+</div>
+
+<div class="section-label">Page 5 — /status (DevOps Control Panel)</div>
+<div class="card">
+  <div class="card-head"><span class="mono">/status</span><span class="badge b-teal" style="margin-left:auto">Demo tool</span></div>
+  <div class="card-body">
+    <div class="page-zone"><div class="zone-label">System info panel</div><div class="zone-desc">
+      <strong>Version</strong> — large display, changes v1→v2 live after deployment<br>
+      <strong>Build number</strong> — Jenkins BUILD_NUMBER env var<br>
+      <strong>Pod hostname</strong> — HOSTNAME env var, changes as pods scale<br>
+      <strong>Uptime</strong> — seconds since container start<br>
+      <strong>Environment</strong> — production / staging label
+    </div></div>
+    <div class="page-zone"><div class="zone-label">Health indicators</div><div class="zone-desc">
+      <strong>/health</strong> — green dot if 200, red if not, auto-polls every 5s<br>
+      <strong>/ready</strong> — green dot if DB connected, red if not<br>
+      <strong>Last checked</strong> timestamp shown
+    </div></div>
+    <div class="page-zone"><div class="zone-label">CPU Load simulator</div><div class="zone-desc">
+      Duration slider: 10 / 30 / 60 / 120 seconds<br>
+      "Trigger Load" button → calls <span class="mono">/load?duration=N</span><br>
+      While running: countdown timer, spinning indicator, "Load active" badge<br>
+      Instruction text: "Run <span class="mono">kubectl get hpa -w</span> in a terminal to watch pods scale"
+    </div></div>
+    <div class="page-zone"><div class="zone-label">Demo checklist</div><div class="zone-desc">Collapsible section — step-by-step demo script with checkboxes so you don't forget anything during the presentation</div></div>
+    <p style="margin-top:8px"><strong>API calls:</strong> <span class="method m-get">GET</span> <span class="mono">/version</span> · <span class="method m-get">GET</span> <span class="mono">/health</span> · <span class="method m-get">GET</span> <span class="mono">/ready</span> · <span class="method m-get">GET</span> <span class="mono">/load</span></p>
+  </div>
+</div>
+
+</div>
+
+<!-- ENDPOINTS -->
+<div id="endpoints" class="panel">
+<table>
+  <thead><tr><th>Method</th><th>Path</th><th>Request body / params</th><th>Response</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td class="sec-td" colspan="5">Events</td></tr>
+    <tr>
+      <td><span class="method m-get">GET</span></td>
+      <td class="mono">/api/events</td>
+      <td>—</td>
+      <td>200 Event[]</td>
+      <td>Returns all events sorted by date asc</td>
+    </tr>
+    <tr>
+      <td><span class="method m-get">GET</span></td>
+      <td class="mono">/api/events/{id}</td>
+      <td>—</td>
+      <td>200 Event<br>404 not found</td>
+      <td>Used by /edit page on load</td>
+    </tr>
+    <tr>
+      <td><span class="method m-post">POST</span></td>
+      <td class="mono">/api/events</td>
+      <td>title, description, date, time, venue, category, max_attendees?</td>
+      <td>201 Event<br>422 validation errors</td>
+      <td>date must be today or future</td>
+    </tr>
+    <tr>
+      <td><span class="method m-put">PUT</span></td>
+      <td class="mono">/api/events/{id}</td>
+      <td>Any subset of POST fields</td>
+      <td>200 Event<br>404 not found<br>422 validation errors</td>
+      <td>Partial update — only send changed fields</td>
+    </tr>
+    <tr>
+      <td><span class="method m-del">DELETE</span></td>
+      <td class="mono">/api/events/{id}</td>
+      <td>—</td>
+      <td>200 {message}<br>404 not found</td>
+      <td>Hard delete, no soft delete needed</td>
+    </tr>
+    <tr><td class="sec-td" colspan="5">DevOps utility</td></tr>
+    <tr>
+      <td><span class="method m-get">GET</span></td>
+      <td class="mono">/health</td>
+      <td>—</td>
+      <td>200 {status:"ok", timestamp}</td>
+      <td>K8s liveness probe — always returns 200 if process is alive</td>
+    </tr>
+    <tr>
+      <td><span class="method m-get">GET</span></td>
+      <td class="mono">/ready</td>
+      <td>—</td>
+      <td>200 {ready:true}<br>503 {ready:false, reason}</td>
+      <td>K8s readiness probe — checks DB connection before returning 200</td>
+    </tr>
+    <tr>
+      <td><span class="method m-get">GET</span></td>
+      <td class="mono">/version</td>
+      <td>—</td>
+      <td>200 {version, build, hostname, env, uptime_seconds}</td>
+      <td>All from env vars: APP_VERSION, BUILD_NUMBER, HOSTNAME</td>
+    </tr>
+    <tr>
+      <td><span class="method m-get">GET</span></td>
+      <td class="mono">/load</td>
+      <td>?duration=30 (default 30, max 120)</td>
+      <td>200 {status:"done", duration, cores_used}</td>
+      <td>Multiprocessing CPU burn — triggers HPA. Cap at 120s to avoid hanging</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="margin-top:12px" class="section-label">Event object shape</div>
+<pre>{
+  "id": "64f1a2b3c4d5e6f7",
+  "title": "Tech Fest 2025",
+  "description": "Annual technology showcase...",
+  "date": "2025-11-10",
+  "time": "10:00",
+  "venue": "Main Auditorium",
+  "category": "Technical",
+  "max_attendees": 200,
+  "created_at": "2025-08-01T10:30:00Z",
+  "updated_at": "2025-08-01T12:00:00Z"
+}</pre>
+
+<div class="section-label">Version object shape</div>
+<pre>{
+  "version": "v2",
+  "build": "14",
+  "hostname": "eventapp-pod-7d9f8b-xk2p",
+  "environment": "production",
+  "uptime_seconds": 3421
+}</pre>
+</div>
+
+<!-- PHASES -->
+<div id="phases" class="panel">
+<div class="timeline">
+
+  <div class="phase-row">
+    <div class="phase-spine"><div class="phase-dot" style="background:#378ADD"></div><div class="phase-line"></div></div>
+    <div class="phase-content">
+      <div class="phase-title">Phase 1 — Backend application</div>
+      <div class="phase-days">Days 1–2 · FastAPI + MongoDB/SQLite</div>
+      <ul class="task-list">
+        <li>Create FastAPI project, install dependencies, verify <span class="mono">uvicorn main:app</span> starts</li>
+        <li>Write Pydantic models: EventCreate, EventUpdate, EventOut with field validators</li>
+        <li>Wire up MongoDB with Motor (async) — collection "events" · OR SQLite with SQLAlchemy if simpler</li>
+        <li>Implement all 5 event endpoints with proper status codes</li>
+        <li>Implement /health, /ready, /version, /load endpoints</li>
+        <li>Implement /load with multiprocessing.Process CPU burn — test it actually pegs CPU</li>
+        <li>Read APP_VERSION, BUILD_NUMBER, HOSTNAME from environment variables</li>
+        <li>Add CORS middleware (allow all origins for dev)</li>
+        <li>Log every request to stdout in JSON format (container logging requirement)</li>
+        <li>Test every endpoint manually with curl or Postman before moving on</li>
+      </ul>
+      <div class="deliverable"><strong>Deliverable:</strong> All 9 endpoints working locally. curl /health returns 200.</div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="phase-spine"><div class="phase-dot" style="background:#1D9E75"></div><div class="phase-line"></div></div>
+    <div class="phase-content">
+      <div class="phase-title">Phase 2 — Frontend</div>
+      <div class="phase-days">Days 2–3 · HTML + CSS + Vanilla JS</div>
+      <ul class="task-list">
+        <li>Build base layout: navbar with version badge, consistent footer with pod hostname</li>
+        <li>index.html: fetch + render event cards, client-side filter/sort, delete with confirm</li>
+        <li>add.html: form with validation, char counters, spinner on submit, toast notifications</li>
+        <li>edit.html: pre-fill from GET /api/events/{id}, PUT on save, redirect on success</li>
+        <li>admin.html: stats row, sortable table, bulk delete with checkboxes</li>
+        <li>status.html: version panel, health dots (auto-poll 5s), load trigger with countdown</li>
+        <li>Write a single api.js module — all fetch calls live here, never inline in pages</li>
+        <li>Write a single ui.js module — toast, spinner, modal helpers</li>
+        <li>Test all pages with backend running locally</li>
+        <li class="warn">Keep CSS in one file. No frameworks. No build tools. Must work as static files served by FastAPI.</li>
+      </ul>
+      <div class="deliverable"><strong>Deliverable:</strong> All 5 pages work end-to-end with the local backend.</div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="phase-spine"><div class="phase-dot" style="background:#BA7517"></div><div class="phase-line"></div></div>
+    <div class="phase-content">
+      <div class="phase-title">Phase 3 — Docker</div>
+      <div class="phase-days">Day 3 · Dockerfile + Docker Compose</div>
+      <ul class="task-list">
+        <li>Write Dockerfile: python:3.11-slim base, copy requirements, pip install, copy app, gunicorn entrypoint</li>
+        <li>Add .dockerignore: exclude __pycache__, .git, venv, *.pyc</li>
+        <li>Build image locally: <span class="mono">docker build -t eventapp:local .</span> — fix any errors</li>
+        <li>Run container with env vars: docker run -e APP_VERSION=v1 -e BUILD_NUMBER=1</li>
+        <li>Write docker-compose.yml: app service + MongoDB service, named network, env vars, volume for DB</li>
+        <li>Test: <span class="mono">docker compose up</span> — app must be reachable at localhost:8000</li>
+        <li>Push image to Docker Hub: tag as <span class="mono">yourusername/eventapp:v1</span></li>
+        <li class="warn">Set CPU requests in Compose too (even just comments) — will need these values for K8s manifests later</li>
+      </ul>
+      <div class="deliverable"><strong>Deliverable:</strong> docker compose up starts fully working app. Image on Docker Hub.</div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="phase-spine"><div class="phase-dot" style="background:#534AB7"></div><div class="phase-line"></div></div>
+    <div class="phase-content">
+      <div class="phase-title">Phase 4 — Kubernetes</div>
+      <div class="phase-days">Days 4–5 · minikube + 4 manifest files</div>
+      <ul class="task-list">
+        <li><span class="mono">minikube start --cpus=4 --memory=6144 --driver=docker</span></li>
+        <li><span class="mono">minikube addons enable metrics-server</span> — do this immediately, it takes a few minutes to become ready</li>
+        <li>Verify metrics: <span class="mono">kubectl top nodes</span> must return data (not error) before HPA will work</li>
+        <li>Write deployment.yaml: 2 replicas, image pull from Docker Hub, env vars (APP_VERSION, BUILD_NUMBER), resource requests cpu:100m memory:128Mi, limits cpu:500m memory:256Mi, liveness probe → /health (initialDelay 10s, period 5s), readiness probe → /ready (initialDelay 15s)</li>
+        <li>Write service.yaml: NodePort on port 30080 → container port 8000</li>
+        <li>Write hpa.yaml: min 1, max 5, cpu targetUtilizationPercentage 50</li>
+        <li>Write mongo-deployment.yaml: single MongoDB pod + ClusterIP service</li>
+        <li>kubectl apply -f k8s/ — watch all pods reach Running state</li>
+        <li>Get app URL: <span class="mono">minikube service eventapp-service --url</span></li>
+        <li>Test HPA manually: hit /load?duration=60, run <span class="mono">kubectl get hpa -w</span>, watch replicas increase</li>
+        <li class="warn">If pods stay Pending, check: kubectl describe pod — usually a resource constraint on the node</li>
+      </ul>
+      <div class="deliverable"><strong>Deliverable:</strong> App running in K8s. HPA scales pods when /load is called. kubectl top pods returns CPU data.</div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="phase-spine"><div class="phase-dot" style="background:#D85A30"></div><div class="phase-line"></div></div>
+    <div class="phase-content">
+      <div class="phase-title">Phase 5 — Jenkins</div>
+      <div class="phase-days">Days 6–7 · Pipeline + credentials + webhook</div>
+      <ul class="task-list">
+        <li>Run Jenkins in Docker: mount /var/run/docker.sock so Jenkins can run docker commands</li>
+        <li>Install plugins: Git, Pipeline, Docker Pipeline, Credentials Binding, GitHub Integration</li>
+        <li>Add credentials: dockerhub (user+pass), kubeconfig (secret file from ~/.kube/config)</li>
+        <li>Write Jenkinsfile: 6 stages — Clone, Install+Test, Build Image, Push Image, Deploy to K8s, Verify</li>
+        <li>In Build stage: tag image as yourusername/eventapp:${BUILD_NUMBER}</li>
+        <li>In Deploy stage: inject kubeconfig, run kubectl set image to update deployment</li>
+        <li>In Verify stage: kubectl rollout status deployment/eventapp — fails pipeline if rollout doesn't complete</li>
+        <li>Create Pipeline job in Jenkins, point to your GitHub repo, set branch to main</li>
+        <li>Run pipeline manually first — fix each stage until all 6 pass</li>
+        <li>Set up ngrok: <span class="mono">ngrok http 8080</span> — copy the https URL</li>
+        <li>Add GitHub webhook: repo Settings → Webhooks → Add → ngrok URL + /github-webhook/ → push events only</li>
+        <li>Push a trivial commit (update README) — verify Jenkins triggers automatically</li>
+        <li class="warn">Jenkins inside Docker needs kubectl installed in the container, or use a Jenkins agent with kubectl. Install kubectl in the Jenkins container image or via an init script.</li>
+      </ul>
+      <div class="deliverable"><strong>Deliverable:</strong> Push to GitHub → Jenkins pipeline auto-triggers → new image built + deployed → /version shows new build number.</div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="phase-spine"><div class="phase-dot" style="background:#3B6D11"></div><div class="phase-line"></div></div>
+    <div class="phase-content">
+      <div class="phase-title">Phase 6 — v1 → v2 demo commit</div>
+      <div class="phase-days">Day 8 · The actual demo moment</div>
+      <ul class="task-list">
+        <li>Make a real code change: add the PUT /api/events/{id} endpoint (if not already done), update APP_VERSION to v2</li>
+        <li>Commit and push — watch the full pipeline run</li>
+        <li>Open /status and refresh — confirm version shows v2 and new build number</li>
+        <li>Practice the demo script until it takes under 8 minutes from push to confirmed deployment</li>
+        <li>Test the HPA demo: kubectl get hpa -w in one terminal, trigger /load from /status page in browser</li>
+        <li>Test pod restart: kubectl delete pod [any pod name] — show it comes back automatically</li>
+      </ul>
+      <div class="deliverable"><strong>Deliverable:</strong> Complete rehearsed demo you can run without hesitation.</div>
+    </div>
+  </div>
+
+  <div class="phase-row">
+    <div class="phase-spine"><div class="phase-dot" style="background:#888780"></div><div class="phase-line"></div></div>
+    <div class="phase-content">
+      <div class="phase-title">Phase 7 — Docs + report</div>
+      <div class="phase-days">Day 9</div>
+      <ul class="task-list">
+        <li>README: setup instructions, env vars table, how to run locally + in K8s, demo steps</li>
+        <li>Architecture diagram (hand-draw or use draw.io — shows you understand the system)</li>
+        <li>Report sections: problem statement, architecture, DevOps pipeline explanation, test results, screenshots, learnings</li>
+        <li>Take screenshots of: Jenkins pipeline stages, HPA scaling output, kubectl get pods at 1 replica and 5 replicas, /status page showing v1 and v2</li>
+      </ul>
+      <div class="deliverable"><strong>Deliverable:</strong> Submission-ready project.</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- FILE STRUCTURE -->
+<div id="files" class="panel">
+<pre>eventapp/
+│
+├── app/
+│   ├── main.py                  # FastAPI app, routes, startup
+│   ├── models.py                # Pydantic schemas (EventCreate, EventUpdate, EventOut)
+│   ├── database.py              # MongoDB/SQLite connection, collection reference
+│   ├── routes/
+│   │   ├── events.py            # /api/events CRUD
+│   │   └── devops.py            # /health /ready /version /load
+│   ├── templates/
+│   │   ├── base.html            # Navbar, footer, shared head tags
+│   │   ├── index.html           # Home — event listing
+│   │   ├── add.html             # Add event form
+│   │   ├── edit.html            # Edit event form
+│   │   ├── admin.html           # Admin dashboard
+│   │   └── status.html          # DevOps control panel
+│   └── static/
+│       ├── style.css            # All styles, single file
+│       ├── api.js               # All fetch calls — one module
+│       └── ui.js                # Toast, spinner, modal helpers
+│
+├── tests/
+│   ├── test_events.py           # CRUD endpoint tests
+│   ├── test_devops.py           # /health /version /ready tests
+│   └── conftest.py              # pytest fixtures, test client
+│
+├── k8s/
+│   ├── deployment.yaml          # App deployment, 2 replicas, probes, resource limits
+│   ├── service.yaml             # NodePort service, port 30080
+│   ├── hpa.yaml                 # HPA, min 1 max 5, cpu 50%
+│   └── mongo-deployment.yaml   # MongoDB pod + ClusterIP service
+│
+├── Dockerfile                   # python:3.11-slim, gunicorn, port 8000
+├── docker-compose.yml           # app + mongo, named network, volumes
+├── Jenkinsfile                  # 6 stages: Clone Test Build Push Deploy Verify
+├── requirements.txt             # fastapi uvicorn gunicorn motor pydantic pytest httpx
+├── config.py                    # Env var loading (APP_VERSION, BUILD_NUMBER, MONGO_URL)
+└── README.md</pre>
+</div>
+
+<!-- K8S MANIFESTS -->
+<div id="manifests" class="panel">
+<div class="section-label">deployment.yaml</div>
+<pre>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: eventapp
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0        # zero downtime
+  template:
+    metadata:
+      labels:
+        app: eventapp
+    spec:
+      containers:
+      - name: eventapp
+        image: yourusername/eventapp:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: APP_VERSION
+          value: "v1"
+        - name: BUILD_NUMBER
+          value: "1"
+        - name: MONGO_URL
+          value: "mongodb://mongo-service:27017"
+        resources:
+          requests:
+            cpu: "100m"          # HPA baseline — required
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 5</pre>
+
+<div class="section-label">hpa.yaml</div>
+<pre>apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: eventapp-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: eventapp
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50</pre>
+
+<div class="section-label">service.yaml</div>
+<pre>apiVersion: v1
+kind: Service
+metadata:
+  name: eventapp-service
+spec:
+  type: NodePort
+  selector:
+    app: eventapp
+  ports:
+  - port: 80
+    targetPort: 8000
+    nodePort: 30080</pre>
+</div>
+
+<!-- JENKINSFILE -->
+<div id="jenkins" class="panel">
+<pre>pipeline {
+  agent any
+
+  environment {
+    IMAGE_NAME = "yourusername/eventapp"
+    IMAGE_TAG  = "${BUILD_NUMBER}"
+  }
+
+  stages {
+
+    stage('Clone') {
+      steps {
+        git branch: 'main', url: 'https://github.com/yourrepo/eventapp.git'
+      }
+    }
+
+    stage('Install + Test') {
+      steps {
+        sh 'pip install -r requirements.txt'
+        sh 'pytest tests/ -v --tb=short'
+      }
+    }
+
+    stage('Build Image') {
+      steps {
+        sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+        sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+      }
+    }
+
+    stage('Push to Docker Hub') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'dockerhub',
+          usernameVariable: 'DOCKER_USER',
+          passwordVariable: 'DOCKER_PASS'
+        )]) {
+          sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+          sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+          sh "docker push ${IMAGE_NAME}:latest"
+        }
+      }
+    }
+
+    stage('Deploy to Kubernetes') {
+      steps {
+        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+          sh """
+            kubectl set image deployment/eventapp \
+              eventapp=${IMAGE_NAME}:${IMAGE_TAG} \
+              --record
+            kubectl set env deployment/eventapp \
+              BUILD_NUMBER=${IMAGE_TAG}
+          """
+        }
+      }
+    }
+
+    stage('Verify Rollout') {
+      steps {
+        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+          sh 'kubectl rollout status deployment/eventapp --timeout=120s'
+        }
+      }
+    }
+
+  }
+
+  post {
+    failure {
+      echo 'Pipeline failed — deployment not updated'
+    }
+    success {
+      echo "Deployed ${IMAGE_NAME}:${IMAGE_TAG} successfully"
+    }
+  }
+}</pre>
+</div>
+
+<!-- TESTS -->
+<div id="tests" class="panel">
+<table>
+  <thead><tr><th>#</th><th>Test</th><th>Input</th><th>Expected</th></tr></thead>
+  <tbody>
+    <tr><td class="sec-td" colspan="4">Functional — events</td></tr>
+    <tr><td>T1</td><td>GET empty list</td><td>GET /api/events, empty DB</td><td>200, []</td></tr>
+    <tr><td>T2</td><td>Create valid event</td><td>POST with all required fields, future date</td><td>201, object with id and created_at</td></tr>
+    <tr><td>T3</td><td>List after create</td><td>GET /api/events</td><td>200, array length 1</td></tr>
+    <tr><td>T4</td><td>Get by ID</td><td>GET /api/events/{valid_id}</td><td>200, correct object</td></tr>
+    <tr><td>T5</td><td>Update event</td><td>PUT /api/events/{id} with new title</td><td>200, updated_at changed, title updated</td></tr>
+    <tr><td>T6</td><td>Delete event</td><td>DELETE /api/events/{valid_id}</td><td>200, {message: "deleted"}</td></tr>
+    <tr><td>T7</td><td>List after delete</td><td>GET /api/events</td><td>200, []</td></tr>
+    <tr><td class="sec-td" colspan="4">DevOps endpoints</td></tr>
+    <tr><td>T8</td><td>Health check</td><td>GET /health</td><td>200, {status:"ok"}</td></tr>
+    <tr><td>T9</td><td>Readiness with DB up</td><td>GET /ready, DB connected</td><td>200, {ready:true}</td></tr>
+    <tr><td>T10</td><td>Version endpoint</td><td>GET /version</td><td>200, contains version, build, hostname</td></tr>
+    <tr><td>T11</td><td>Load endpoint</td><td>GET /load?duration=5</td><td>200, {status:"done", duration:5}</td></tr>
+    <tr><td class="sec-td" colspan="4">Edge cases — input validation</td></tr>
+    <tr><td>E1</td><td>Missing required field</td><td>POST /api/events without title</td><td>422, error mentions "title"</td></tr>
+    <tr><td>E2</td><td>Empty string title</td><td>POST with title: ""</td><td>422, not 201</td></tr>
+    <tr><td>E3</td><td>Past date</td><td>POST with date yesterday</td><td>422, "date must be today or future"</td></tr>
+    <tr><td>E4</td><td>Invalid date format</td><td>POST with date: "not-a-date"</td><td>422</td></tr>
+    <tr><td>E5</td><td>Malformed ID</td><td>GET /api/events/notanid</td><td>422 or 400, not 500</td></tr>
+    <tr><td>E6</td><td>Non-existent ID</td><td>GET /api/events/000000000000000000000000</td><td>404, not 500</td></tr>
+    <tr><td>E7</td><td>Double delete</td><td>DELETE same ID twice</td><td>First: 200. Second: 404</td></tr>
+    <tr><td>E8</td><td>Duration cap on /load</td><td>GET /load?duration=9999</td><td>Capped at 120, not 9999</td></tr>
+    <tr><td class="sec-td" colspan="4">Edge cases — DevOps</td></tr>
+    <tr><td>D1</td><td>DB down → readiness</td><td>Kill MongoDB, GET /ready</td><td>503, {ready:false}</td></tr>
+    <tr><td>D2</td><td>DB down → health</td><td>Kill MongoDB, GET /health</td><td>200 — liveness should NOT depend on DB</td></tr>
+    <tr><td>D3</td><td>HPA scales up</td><td>Call /load?duration=60, watch kubectl get hpa</td><td>Replicas increase above 1 within ~2 min</td></tr>
+    <tr><td>D4</td><td>HPA scales down</td><td>Stop load, wait 5 min</td><td>Replicas return to 1</td></tr>
+    <tr><td>D5</td><td>Pod self-heal</td><td>kubectl delete pod [name]</td><td>New pod appears automatically, service uninterrupted</td></tr>
+    <tr><td>D6</td><td>Rolling update</td><td>Push new image, watch kubectl rollout</td><td>Old pods replaced one at a time, 0 downtime</td></tr>
+    <tr><td>D7</td><td>Bad code → pipeline gate</td><td>Push code with a failing test</td><td>Pipeline stops at Test stage, no new image deployed</td></tr>
+    <tr><td>D8</td><td>Port conflict on host</td><td>Port 8000 already in use</td><td>Document fix: change hostPort in compose/service</td></tr>
+  </tbody>
+</table>
+</div>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
